@@ -34,7 +34,7 @@ my %WriteMakefileArgs = (
   "PREREQ_PM" => {
     "Carp" => 0,
     "List::Util" => 0,
-    "Number::Compare" => 0,
+    "Number::Compare" => "0.02",
     "Path::Class" => 0,
     "Scalar::Util" => 0,
     "Text::Glob" => 0,
@@ -42,7 +42,7 @@ my %WriteMakefileArgs = (
     "strict" => 0,
     "warnings" => 0
   },
-  "VERSION" => "0.001",
+  "VERSION" => "0.002",
   "test" => {
     "TESTS" => "t/*.t"
   }

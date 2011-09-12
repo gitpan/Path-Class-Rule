@@ -2,7 +2,7 @@ NAME
     Path::Class::Rule - File finder using Path::Class
 
 VERSION
-    version 0.001
+    version 0.002
 
 SYNOPSIS
       use Path::Class::Rule;
@@ -45,6 +45,8 @@ DESCRIPTION
     *   breadth-first (default) or pre- or post-order depth-first searching
 
     *   follows symlinks (by default, but can be disabled)
+
+    *   directories visited only once (no infinite loops)
 
     *   doesn't chdir during operation
 
@@ -90,12 +92,18 @@ USAGE
     *   "follow_symlinks" -- Follow directory symlinks when true. Default is
         1.
 
-    Following symlinks may result in files be returned more than once;
-    turning it off requires overhead of a stat call. Set this appropriate to
-    your needs.
+    *   "loop_safe" -- Prevents visiting the same directory more than once
+        when true. Default is 1.
 
-    Note: each directory path will only be entered once. Due to symlinks,
-    this could mean a physical directory is entered more than once.
+    Filesystem loops might exist from either hard or soft links. The
+    "loop_safe" option prevents infinite loops, but adds some overhead by
+    making "stat" calls. Because directories are visited only once when
+    "loop_safe" is true, matches could come from a symlinked directory
+    before the real directory depending on the search order. To get only the
+    real files, turn off "follow_symlinks". Turning "loop_safe" off and
+    leaving "follow_symlinks" on avoids "stat" calls and will be fastest,
+    but with the risk of an infinite loop and repeated files. The default is
+    slow, but safe.
 
     The Path::Class objects inspected and returned will be relative to the
     search directories provided. If these are absolute, then the objects
@@ -118,24 +126,8 @@ USAGE
   Logic operations
     "Path::Class::Rule" provides three logic operations for adding rules to
     the object. Rules may be either a subroutine reference with specific
-    semantics (described below) or another "Path::Class::Rule" object.
-
-    A rule subroutine gets a Path::Class argument (which is also locally
-    aliased into the $_ global variable). It must return one of three
-    values:
-
-    *   A true value -- indicates the constraint is satisfied
-
-    *   A false value -- indicates the constraint is not satisfied
-
-    *   "0 but true" -- a special return value that signals that a directory
-        should not be searched recursively
-
-    The "0 but true" value will shortcut logic (it is treated as "true" for
-    an "or" rule and "false" for an "and" rule). For a directory, it ensures
-    that the directory will not be returned from the iterator and that its
-    children will not be evaluated either. It has no effect on files -- it
-    is equivalent to returning a false value.
+    semantics (described below in "EXTENDING") or another
+    "Path::Class::Rule" object.
 
    "and"
       $rule->and( sub { -r -w -x $_ } ); # stacked filetest example
@@ -259,6 +251,24 @@ RULE METHODS
 
       $rule->size(">10K")
 
+  Depth rules
+      $rule->min_depth(3);
+      $rule->max_depth(5);
+
+    The "min_depth" and "max_depth" rule methods take a single argument and
+    limit the paths returned to a minimum or maximum depth (respectively)
+    from the starting search directory.
+
+  Other rules
+   "dangling"
+      $rule->symlink->dangling;
+      $rule->not_dangling;
+
+    The "dangling" rule method matches dangling symlinks. Use it or its
+    inverse to control how dangling symlinks should be treated. Note that a
+    dangling symlink will be returned by the iterator as a Path::Class::File
+    object.
+
   Negated rules
     All rule methods have a negated form preceded by "not_".
 
@@ -268,12 +278,55 @@ RULE METHODS
     "not_nonempty" (which is thus a less efficient way of saying "empty").
 
 EXTENDING
+  Custom rule subroutines
+    Rules are implemented as (usually anonymous) subroutines callbacks that
+    return a value indicating whether or not the rule matches. These
+    callbacks are called with two arguments. The first argument is a
+    Path::Class object, which is also locally aliased as the $_ global
+    variable for convenience in simple tests.
+
+      $rule->and( sub { -r -w -x $_ } ); # tests $_
+
+    The second argument is a hash reference that can be used to maintain
+    state. Keys beginning with an underscore are reserved for
+    "Path::Class::Rule" to provide additional data about the search in
+    progress. For example, the "_depth" key is used to support minimum and
+    maximum depth checks.
+
+    The custom rule subroutine must return one of three values:
+
+    *   A true value -- indicates the constraint is satisfied
+
+    *   A false value -- indicates the constraint is not satisfied
+
+    *   "0 but true" -- a special return value that signals that a directory
+        should not be searched recursively
+
+    The "0 but true" value will shortcut logic (it is treated as "true" for
+    an "or" rule and "false" for an "and" rule). For a directory, it ensures
+    that the directory will not be returned from the iterator and that its
+    children will not be evaluated either. It has no effect on files -- it
+    is equivalent to returning a false value.
+
+    For example, this is equivalent to the "max_depth" rule method with a
+    depth of 3:
+
+      $rule->and(
+        sub {
+          my ($path, $stash) = @_;
+          return $stash->{_depth} <= 3 ? 1 : "0 but true";
+        }
+      );
+
+    Files of depth 4 will not be returned by the iterator; directories of
+    depth 4 will not be returned and will not be searched.
+
+  Extension modules and custom rule methods
     One of the strengths of File::Find::Rule is the many CPAN modules that
     extend it. "Path::Class::Rule" provides the "add_helper" method to
     provide a similar mechanism for extensions.
 
-  "add_helper"
-    The "add_helper" method takes two arguments, a "name" for the rule
+    The "add_helper" class method takes two arguments, a "name" for the rule
     method and a closure-generating callback. An inverted "not_*" method is
     generated automatically. Extension classes should call this as a class
     method to install new rule methods. For example, this adds a "foo"
@@ -307,13 +360,9 @@ CAVEATS
     This is an early release for community feedback and contribution. The
     API may still change. Some features are still unimplemented:
 
-    *   True loop detection
-
     *   Taint mode support
 
     *   Error handling callback
-
-    *   Depth limitations
 
     *   Assorted File::Find::Rule helpers (e.g. "grep")
 
@@ -330,7 +379,6 @@ SEE ALSO
     Here is an (incomplete) list of alternatives, with some comparison
     commentary.
 
-  File::Find
     File::Find is part of the Perl core. It requires the user to write a
     callback function to process each node of the search. Callbacks must use
     global variables to determine the current node. It only supports
@@ -339,13 +387,11 @@ SEE ALSO
     process in a directory. File::Find::Closures can be used to help create
     a callback for File::Find.
 
-  File::Find::Rule
     File::Find::Rule is an object-oriented wrapper around File::Find. It
     provides a number of helper functions and there are many more
     "File::Find::Rule::*" modules on CPAN with additional helpers. It
     provides an iterator interface, but precomputes all the results.
 
-  File::Next
     File::Next provides iterators for file, directories or "everything". It
     takes two callbacks, one to match files and one to decide which
     directories to descend. It does not allow control over breadth/depth
@@ -353,18 +399,15 @@ SEE ALSO
     a directory. Like File::Find, it requires callbacks to use global
     varaibles.
 
-  Path::Class::Iterator
     Path::Class::Iterator walks a directory structure with an iterator. It
     is implemented as Path::Class subclasses, which adds a degree of extra
     complexity. It takes a single callback to define "interesting" paths to
     return. The callback gets a Path::Class::Iterator::File or
     Path::Class::Iterator::Dir object for evaluation.
 
-  File::Find::Declare
     File::Find::Declare has declarative helper rules, no iterator, is
     Moose-based and offers no control over ordering or following symlinks.
 
-  File::Find::Node
     File::Find::Node has no iterator, does matching via callback and offers
     no control over ordering.
 

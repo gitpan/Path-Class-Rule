@@ -4,13 +4,13 @@ use warnings;
 
 package Path::Class::Rule;
 # ABSTRACT: File finder using Path::Class
-our $VERSION = '0.001'; # VERSION
+our $VERSION = '0.002'; # VERSION
 
 # Dependencies
 use namespace::autoclean;
 use Carp;
 use List::Util qw/first/;
-use Number::Compare;
+use Number::Compare 0.02;
 use Path::Class;
 use Scalar::Util qw/blessed reftype/;
 use Text::Glob qw/glob_to_regex/;
@@ -57,8 +57,9 @@ sub add_helper {
 #--------------------------------------------------------------------------#
 
 my %defaults = (
-  follow_symlinks => 1,
   depthfirst => 0,
+  follow_symlinks => 1,
+  loop_safe => ( $^O eq 'MSWin32' ? 0 : 1 ), # No inode #'s on Windows
 );
 
 sub iter {
@@ -66,29 +67,40 @@ sub iter {
   my $args =  ref($_[0])  && !blessed($_[0])  ? shift
             : ref($_[-1]) && !blessed($_[-1]) ? pop : {};
   my $opts = { %defaults, %$args };
-  my @queue = map { dir($_) } @_ ? @_ : '.';
+  my @queue = map { { path => dir($_), depth => 0 } } @_ ? @_ : '.';
+  my $stash = {};
   my %seen;
 
   return sub {
     LOOP: {
-      my $item = shift @queue
+      my $task = shift @queue
         or return;
+      my ($item, $depth) = @{$task}{qw/path depth/};
       if ( ! $opts->{follow_symlinks} ) {
         redo LOOP if -l $item;
       }
       local $_ = $item;
-      my $interest = $self->test($item);
+      $stash->{_depth} = $depth;
+      my $interest = $self->test($item, $stash);
       my $prune = $interest && ! (0+$interest); # capture "0 but true"
       $interest += 0;                           # then ignore "but true"
-      if ($item->is_dir && ! $seen{$item}++ && ! $prune) {
+      my $unique_id;
+      if ($opts->{loop_safe}) {
+        my $st = $item->stat || $item->lstat;
+        $unique_id = join(",", $st->dev, $st->ino);
+      }
+      else {
+        $unique_id = $item;
+      }
+      if ($item->is_dir && ! $seen{$unique_id}++ && ! $prune) {
         if ( $opts->{depthfirst} ) {
-          my @next = sort $item->children;
-          push @next, $item if $opts->{depthfirst} < 0; # repeat for postorder
+          my @next = $self->_taskify($depth+1, $item->children);
+          push @next, $task if $opts->{depthfirst} < 0; # repeat for postorder
           unshift @queue, @next;
           redo LOOP if $opts->{depthfirst} < 0;
         }
         else {
-          push @queue, sort $item->children;
+          push @queue, $self->_taskify($depth+1, $item->children);
         }
       }
       return $item
@@ -147,10 +159,10 @@ sub not {
 }
 
 sub test {
-  my ($self, $item) = @_;
+  my ($self, $item, $stash) = @_;
   my $result;
   for my $rule ( @{$self->{rules}} ) {
-    $result = $rule->($item) || 0;
+    $result = $rule->($item, $stash) || 0;
     return $result if ! (0+$result); # want to shortcut on "0 but true"
   }
   return $result;
@@ -179,6 +191,11 @@ sub _rulify {
   return @rules
 }
 
+sub _taskify {
+  my ($self, $depth, @paths) = @_;
+  return map { {path => $_, depth => $depth} } sort @paths;
+}
+
 #--------------------------------------------------------------------------#
 # built-in helpers
 #--------------------------------------------------------------------------#
@@ -188,11 +205,18 @@ sub _regexify {
   return ref($_) && reftype($_) eq 'REGEXP' ? $_ : glob_to_regex($_);
 }
 
+# "simple" helpers take no arguments
 my %simple_helpers = (
   # use Path::Class::is_dir instead of extra -d call
-  map { $_ => sub { $_->is_dir } } qw/dir directory/,
+  ( map { $_ => sub { $_->is_dir } } qw/dir directory/ ),
+  dangling => sub { -l $_ && ! $_->stat },
 );
 
+while ( my ($k,$v) = each %simple_helpers ) {
+  __PACKAGE__->add_helper( $k, sub { return $v } );
+}
+
+# "complex" helpers take arguments
 my %complex_helpers = (
   name => sub {
     Carp::croak("No patterns provided to 'skip_dirs'") unless @_;
@@ -212,14 +236,26 @@ my %complex_helpers = (
       return 1; # otherwise, like a null rule
     }
   },
+  min_depth => sub {
+    Carp::croak("No depth argument given to 'min_depth'") unless @_;
+    my $min_depth = 0 + shift; # if this warns, do here and not on every file
+    return sub {
+      my ($f, $stash) = @_;
+      return $stash->{_depth} >= $min_depth;
+    }
+  },
+  max_depth => sub {
+    Carp::croak("No depth argument given to 'max_depth'") unless @_;
+    my $max_depth = 0 + shift; # if this warns, do here and not on every file
+    return sub {
+      my ($f, $stash) = @_;
+      return $stash->{_depth} <= $max_depth ? 1 : "0 but true"; # prune
+    }
+  },
 );
 
 while ( my ($k,$v) = each %complex_helpers ) {
   __PACKAGE__->add_helper( $k, $v );
-}
-
-while ( my ($k,$v) = each %simple_helpers ) {
-  __PACKAGE__->add_helper( $k, sub { return $v } );
 }
 
 # X_tests adapted from File::Find::Rule
@@ -291,7 +327,7 @@ Path::Class::Rule - File finder using Path::Class
 
 =head1 VERSION
 
-version 0.001
+version 0.002
 
 =head1 SYNOPSIS
 
@@ -351,6 +387,10 @@ follows symlinks (by default, but can be disabled)
 
 =item *
 
+directories visited only once (no infinite loops)
+
+=item *
+
 doesn't chdir during operation
 
 =item *
@@ -407,14 +447,20 @@ C<depthfirst> -- Controls order of results.  Valid values are "1" (post-order, d
 
 C<follow_symlinks> -- Follow directory symlinks when true. Default is 1.
 
+=item *
+
+C<loop_safe> -- Prevents visiting the same directory more than once when true.  Default is 1.
+
 =back
 
-Following symlinks may result in files be returned more than once;
-turning it off requires overhead of a stat call. Set this appropriate
-to your needs.
-
-B<Note>: each directory path will only be entered once.  Due to symlinks,
-this could mean a physical directory is entered more than once.
+Filesystem loops might exist from either hard or soft links.  The C<loop_safe>
+option prevents infinite loops, but adds some overhead by making C<stat> calls.
+Because directories are visited only once when C<loop_safe> is true, matches
+could come from a symlinked directory before the real directory depending on
+the search order.  To get only the real files, turn off C<follow_symlinks>.
+Turning C<loop_safe> off and leaving C<follow_symlinks> on avoids C<stat> calls
+and will be fastest, but with the risk of an infinite loop and repeated files.
+The default is slow, but safe.
 
 The L<Path::Class> objects inspected and returned will be relative to the
 search directories provided.  If these are absolute, then the objects returned
@@ -440,32 +486,7 @@ someone want to create their own, custom iteration algorithm.
 
 C<Path::Class::Rule> provides three logic operations for adding rules to the
 object.  Rules may be either a subroutine reference with specific semantics
-(described below) or another C<Path::Class::Rule> object.
-
-A rule subroutine gets a L<Path::Class> argument (which is also locally
-aliased into the C<$_> global variable).  It must return one of three values:
-
-=over 4
-
-=item *
-
-A true value -- indicates the constraint is satisfied
-
-=item *
-
-A false value -- indicates the constraint is not satisfied
-
-=item *
-
-"0 but true" -- a special return value that signals that a directory should not be searched recursively
-
-=back
-
-The C<0 but true> value will shortcut logic (it is treated as "true" for an
-"or" rule and "false" for an "and" rule).  For a directory, it ensures that the
-directory will not be returned from the iterator and that its children will not
-be evaluated either.  It has no effect on files -- it is equivalent to
-returning a false value.
+(described below in L</EXTENDING>) or another C<Path::Class::Rule> object.
 
 =head3 C<and>
 
@@ -596,6 +617,26 @@ For example:
 
   $rule->size(">10K")
 
+=head2 Depth rules
+
+  $rule->min_depth(3);
+  $rule->max_depth(5);
+
+The C<min_depth> and C<max_depth> rule methods take a single argument
+and limit the paths returned to a minimum or maximum depth (respectively)
+from the starting search directory.
+
+=head2 Other rules
+
+=head3 C<dangling>
+
+  $rule->symlink->dangling;
+  $rule->not_dangling;
+
+The C<dangling> rule method matches dangling symlinks.  Use it or its inverse
+to control how dangling symlinks should be treated.  Note that a dangling
+symlink will be returned by the iterator as a L<Path::Class::File> object.
+
 =head2 Negated rules
 
 All rule methods have a negated form preceded by "not_".
@@ -607,16 +648,69 @@ C<not_nonempty> (which is thus a less efficient way of saying C<empty>).
 
 =head1 EXTENDING
 
+=head2 Custom rule subroutines
+
+Rules are implemented as (usually anonymous) subroutines callbacks that return
+a value indicating whether or not the rule matches.  These callbacks are called
+with two arguments.  The first argument is a L<Path::Class> object, which is
+also locally aliased as the C<$_> global variable for convenience in simple
+tests.
+
+  $rule->and( sub { -r -w -x $_ } ); # tests $_
+
+The second argument is a hash reference that can be used to maintain state.
+Keys beginning with an underscore are B<reserved> for C<Path::Class::Rule>
+to provide additional data about the search in progress.
+For example, the C<_depth> key is used to support minimum and maximum
+depth checks.
+
+The custom rule subroutine must return one of three values:
+
+=over 4
+
+=item *
+
+A true value -- indicates the constraint is satisfied
+
+=item *
+
+A false value -- indicates the constraint is not satisfied
+
+=item *
+
+"0 but true" -- a special return value that signals that a directory should not be searched recursively
+
+=back
+
+The C<0 but true> value will shortcut logic (it is treated as "true" for an
+"or" rule and "false" for an "and" rule).  For a directory, it ensures that the
+directory will not be returned from the iterator and that its children will not
+be evaluated either.  It has no effect on files -- it is equivalent to
+returning a false value.
+
+For example, this is equivalent to the "max_depth" rule method with
+a depth of 3:
+
+  $rule->and(
+    sub {
+      my ($path, $stash) = @_;
+      return $stash->{_depth} <= 3 ? 1 : "0 but true";
+    }
+  );
+
+Files of depth 4 will not be returned by the iterator; directories of depth
+4 will not be returned and will not be searched.
+
+=head2 Extension modules and custom rule methods
+
 One of the strengths of L<File::Find::Rule> is the many CPAN modules
 that extend it.  C<Path::Class::Rule> provides the C<add_helper> method
 to provide a similar mechanism for extensions.
 
-=head2 C<add_helper>
-
-The C<add_helper> method takes two arguments, a C<name> for the rule method and
-a closure-generating callback.  An inverted "not_*" method is generated
-automatically.  Extension classes should call this as a class method to
-install new rule methods.  For example, this adds a "foo" method that checks
+The C<add_helper> class method takes two arguments, a C<name> for the rule
+method and a closure-generating callback.  An inverted "not_*" method is
+generated automatically.  Extension classes should call this as a class method
+to install new rule methods.  For example, this adds a "foo" method that checks
 if the filename is "foo":
 
   package Path::Class::Rule::Foo;
@@ -652,19 +746,11 @@ API may still change.  Some features are still unimplemented:
 
 =item *
 
-True loop detection
-
-=item *
-
 Taint mode support
 
 =item *
 
 Error handling callback
-
-=item *
-
-Depth limitations
 
 =item *
 
@@ -687,8 +773,6 @@ There are many other file finding modules out there.  They all have various
 features/deficiencies, depending on one's preferences and needs.  Here is an
 (incomplete) list of alternatives, with some comparison commentary.
 
-=head2 File::Find
-
 L<File::Find> is part of the Perl core.  It requires the user to write a
 callback function to process each node of the search.  Callbacks must use
 global variables to determine the current node.  It only supports depth-first
@@ -697,14 +781,10 @@ callbacks; the former is required for sorting files to process in a directory.
 L<File::Find::Closures> can be used to help create a callback for
 L<File::Find>.
 
-=head2 File::Find::Rule
-
 L<File::Find::Rule> is an object-oriented wrapper around L<File::Find>.  It
 provides a number of helper functions and there are many more
 C<File::Find::Rule::*> modules on CPAN with additional helpers.  It provides
 an iterator interface, but precomputes all the results.
-
-=head2 File::Next
 
 L<File::Next> provides iterators for file, directories or "everything".  It
 takes two callbacks, one to match files and one to decide which directories to
@@ -712,20 +792,14 @@ descend.  It does not allow control over breadth/depth order, though it does
 provide means to sort files for processing within a directory. Like
 L<File::Find>, it requires callbacks to use global varaibles.
 
-=head2 Path::Class::Iterator
-
 L<Path::Class::Iterator> walks a directory structure with an iterator.  It is
 implemented as L<Path::Class> subclasses, which adds a degree of extra
 complexity. It takes a single callback to define "interesting" paths to return.
 The callback gets a L<Path::Class::Iterator::File> or
 L<Path::Class::Iterator::Dir> object for evaluation.
 
-=head2 File::Find::Declare
-
 L<File::Find::Declare> has declarative helper rules, no iterator, is
 Moose-based and offers no control over ordering or following symlinks.
-
-=head2 File::Find::Node
 
 L<File::Find::Node> has no iterator, does matching via callback and offers
 no control over ordering.

@@ -15,6 +15,7 @@ t/basic.t
 t/breadth-depth.t
 t/lib/PCNTest.pm
 t/logic.t
+t/min-max-depth.t
 t/stat_tests.t
 t/symlink.t
 t/x_tests.t

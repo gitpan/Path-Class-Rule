@@ -34,7 +34,7 @@
          "requires" : {
             "Carp" : 0,
             "List::Util" : 0,
-            "Number::Compare" : 0,
+            "Number::Compare" : "0.02",
             "Path::Class" : 0,
             "Scalar::Util" : 0,
             "Text::Glob" : 0,
@@ -63,7 +63,7 @@
    "provides" : {
       "Path::Class::Rule" : {
          "file" : "lib/Path/Class/Rule.pm",
-         "version" : "0.001"
+         "version" : "0.002"
       }
    },
    "release_status" : "stable",
@@ -79,6 +79,6 @@
          "web" : "http://github.com/dagolden/path-class-rule"
       }
    },
-   "version" : "0.001"
+   "version" : "0.002"
 }
 

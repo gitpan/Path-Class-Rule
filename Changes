@@ -1,5 +1,24 @@
 Revision history for Path-Class-Rule
 
+0.002     2011-09-12 14:17:13 America/New_York
+
+  [NEW FEATURES]
+
+    - Added 'min_depth' and 'max_depth' rule methods
+
+    - Added 'dangling' rule method to match dangling symlinks
+
+    - Added 'loop_safe' option to control infinite loop protection
+      (default is true)
+
+    - Rule callbacks receive a hash reference for storing optional state
+
+  [BUG FIXES]
+
+    - Bumped Number::Compare prerequisite version to 0.02 to
+      avoid uninitialized warnings when comparing numbers without
+      a magnitude.
+
 0.001     2011-09-11 22:40:44 America/New_York
   
     - Initial release
