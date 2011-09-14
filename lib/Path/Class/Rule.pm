@@ -4,16 +4,21 @@ use warnings;
 
 package Path::Class::Rule;
 # ABSTRACT: File finder using Path::Class
-our $VERSION = '0.004'; # VERSION
+our $VERSION = '0.005'; # VERSION
+
+# Register warnings category
+use warnings::register;
 
 # Dependencies
 use namespace::autoclean;
+use re 'regexp_pattern';
 use Carp;
 use List::Util qw/first/;
 use Number::Compare 0.02;
 use Path::Class;
 use Scalar::Util qw/blessed reftype/;
 use Text::Glob qw/glob_to_regex/;
+use Try::Tiny;
 
 #--------------------------------------------------------------------------#
 # constructors and meta methods
@@ -62,6 +67,7 @@ my %defaults = (
   depthfirst => 0,
   follow_symlinks => 1,
   loop_safe => ( $^O eq 'MSWin32' ? 0 : 1 ), # No inode #'s on Windows
+  error_handler => sub { die sprintf("%s: %s", @_) },
 );
 
 sub iter {
@@ -78,26 +84,28 @@ sub iter {
       my $task = shift @queue
         or return;
       my ($item, $depth) = @{$task}{qw/path depth/};
+      return $$item if ref $item eq 'REF'; # deferred for postorder
       if ( ! $opts->{follow_symlinks} ) {
         redo LOOP if -l $item;
       }
       local $_ = $item;
       $stash->{_depth} = $depth;
-      my $interest = $self->test($item, $stash);
+      my $interest =
+        try   { $self->test($item, $stash) }
+        catch { $opts->{error_handler}->($item, $_) };
       my $prune = $interest && ! (0+$interest); # capture "0 but true"
       $interest += 0;                           # then ignore "but true"
-      my $unique_id;
-      if ($opts->{loop_safe}) {
-        my $st = $item->stat || $item->lstat;
-        $unique_id = join(",", $st->dev, $st->ino);
-      }
-      else {
-        $unique_id = $item;
-      }
+      my $unique_id = $self->_unique_id($item, $opts);
       if ($item->is_dir && ! $seen{$unique_id}++ && ! $prune) {
-        if ( $opts->{depthfirst} ) {
+        if ( ! -r $item ) {
+            warnings::warnif("Directory '$item' is not readable. Skipping it");
+        }
+        elsif ( $opts->{depthfirst} ) {
           my @next = $self->_taskify($depth+1, $item->children);
-          push @next, $task if $opts->{depthfirst} < 0; # repeat for postorder
+          # for postorder, requeue as reference to signal it can be returned
+          # without being retested
+          push @next, { path => \$item, depth => $depth}
+            if $opts->{depthfirst} < 0;
           unshift @queue, @next;
           redo LOOP if $opts->{depthfirst} < 0;
         }
@@ -160,6 +168,18 @@ sub not {
   return $self->and( $coderef );
 }
 
+sub skip {
+  my $self = shift;
+  my @rules = $self->_rulify("not", @_);
+  my $obj = $self->new->or(@rules);
+  my $coderef = sub {
+    my $item = shift;
+    my $result = $obj->test($item);
+    return $result ? "0 but true" : "1";
+  };
+  return $self->and( $coderef );
+}
+
 sub test {
   my ($self, $item, $stash) = @_;
   my $result;
@@ -198,13 +218,35 @@ sub _taskify {
   return map { {path => $_, depth => $depth} } sort @paths;
 }
 
+sub _unique_id {
+  my ($self, $item, $opts) = @_;
+  my $unique_id;
+  if ($opts->{loop_safe}) {
+    my $st = eval { $item->stat || $item->lstat };
+    if ( $st ) {
+      $unique_id = join(",", $st->dev, $st->ino);
+    }
+    else {
+      my $type = $item->is_dir ? 'directory' : 'file';
+      warnings::warnif("Could not stat $type '$item'");
+      $unique_id = $item;
+    }
+  }
+  else {
+    $unique_id = $item;
+  }
+  return $unique_id;
+}
 #--------------------------------------------------------------------------#
 # built-in helpers
 #--------------------------------------------------------------------------#
 
 sub _regexify {
-  my $re = shift;
-  return ref($_) && reftype($_) eq 'REGEXP' ? $_ : glob_to_regex($_);
+  my ($re, $add) = @_;
+  $add ||= '';
+  my $new = ref($re) && reftype($re) eq 'REGEXP' ? $re : glob_to_regex($re);
+  my ($pattern, $flags) = regexp_pattern($new);
+  return qr/(?^$flags$add)$pattern/;
 }
 
 # "simple" helpers take no arguments
@@ -221,12 +263,21 @@ while ( my ($k,$v) = each %simple_helpers ) {
 # "complex" helpers take arguments
 my %complex_helpers = (
   name => sub {
-    Carp::croak("No patterns provided to 'skip_dirs'") unless @_;
+    Carp::croak("No patterns provided to 'name'") unless @_;
     my @patterns = map { _regexify($_) } @_;
     return sub {
       my $f = shift;
       my $name = $f->relative($f->parent);
       return (first { $name =~ $_} @patterns ) ? 1 : 0;
+    }
+  },
+  iname => sub {
+    Carp::croak("No patterns provided to 'iname'") unless @_;
+    my @patterns = map { _regexify($_, "i") } @_;
+    return sub {
+      my $f = shift;
+      my $name = $f->relative($f->parent);
+      return (first { $name =~ m{$_}i } @patterns ) ? 1 : 0;
     }
   },
   min_depth => sub {
@@ -409,7 +460,7 @@ Path::Class::Rule - File finder using Path::Class
 
 =head1 VERSION
 
-version 0.004
+version 0.005
 
 =head1 SYNOPSIS
 
@@ -527,6 +578,10 @@ C<depthfirst> -- Controls order of results.  Valid values are "1" (post-order, d
 
 =item *
 
+C<error_handler> -- Catches errors during execution of rule tests. Default handler dies with the filename and error.
+
+=item *
+
 C<follow_symlinks> -- Follow directory symlinks when true. Default is 1.
 
 =item *
@@ -543,6 +598,11 @@ the search order.  To get only the real files, turn off C<follow_symlinks>.
 Turning C<loop_safe> off and leaving C<follow_symlinks> on avoids C<stat> calls
 and will be fastest, but with the risk of an infinite loop and repeated files.
 The default is slow, but safe.
+
+The C<error_handler> parameter must be a subroutine reference.  It will be
+called when a rule test throws an exception.  The first argument will be
+the L<Path::Class> object being inspected and the second argument will be
+the exception.
 
 The L<Path::Class> objects inspected and returned will be relative to the
 search directories provided.  If these are absolute, then the objects returned
@@ -598,6 +658,21 @@ Takes one or more alternatives and adds them as a negative constraint to the
 current rule. E.g. "old rule AND NOT ( new1 AND new2 AND ...)".  Returns the
 object to allow method chaining.
 
+=head3 C<skip>
+
+  $rule->skip(
+    $rule->new->dir->not_writeable,
+    $rule->new->dir->name("foo"),
+  );
+
+Takes one or more alternatives and will prune a directory if any of the
+criteria match.  For files, it is equivalent to
+C<< $rule->not($rule->or(@rules)) >>.  Returns the object to allow method
+chaining.
+
+This method should be called as early as possible in the rule chain.
+See L</skip_dirs> below for further explanation and an example.
+
 =head1 RULE METHODS
 
 Rule methods are helpers that add constraints.  Internally, they generate a
@@ -615,11 +690,19 @@ The C<name> method takes one or more patterns and creates a rule that is true
 if any of the patterns match the B<basename> of the file or directory path.
 Patterns may be regular expressions or glob expressions (or literal names).
 
+=head3 C<iname>
+
+  $rule->iname( "foo.txt" );
+  $rule->iname( qr/foo/, "bar.*");
+
+The C<iname> method is just like the C<name> method, but matches
+case-insensitively.
+
 =head3 C<skip_dirs>
 
   $rule->skip_dirs( @patterns );
 
-The C<skip_dirs> method skips directories that match or or more patterns.
+The C<skip_dirs> method skips directories that match one or more patterns.
 Patterns may be regular expressions or globs (just like C<name>).  Directories
 that match will not be returned from the iterator and will be excluded from
 further search.
@@ -825,6 +908,9 @@ a depth of 3:
 Files of depth 4 will not be returned by the iterator; directories of depth
 4 will not be returned and will not be searched.
 
+Generally, if you want to do directory pruning, you are encouraged to use the
+L</skip> method instead of writing your own logic using C<0 but true>.
+
 =head2 Extension modules and custom rule methods
 
 One of the strengths of L<File::Find::Rule> is the many CPAN modules
@@ -863,6 +949,15 @@ This allows the following rule methods:
 The C<add_helper> method will warn and ignore a helper with the same name as
 an existing method.
 
+=head1 LEXICAL WARNINGS
+
+If you run with lexical warnings enabled, C<Path::Class::Rule> will issue
+warnings in certain circumstances (such as a read-only directory that must be
+skipped).  To disable these categories, put the following statement at the
+correct scope:
+
+  no warnings 'Path::Class::Rule';
+
 =head1 CAVEATS
 
 This is an early release for community feedback and contribution.
@@ -876,19 +971,13 @@ Taint mode support
 
 =item *
 
-Error handling callback
-
-=item *
-
-Assorted L<File::Find::Rule> helpers (e.g. C<grep>)
+Some L<File::Find::Rule> helpers (e.g. C<grep>)
 
 =item *
 
 Extension class loading via C<import()>
 
 =back
-
-Test coverage is poor.
 
 Filetest operators and stat rules are subject to the usual portability
 considerations.  See L<perlport> for details.

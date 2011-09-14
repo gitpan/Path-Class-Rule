@@ -34,7 +34,7 @@ no_index:
 provides:
   Path::Class::Rule:
     file: lib/Path/Class/Rule.pm
-    version: 0.004
+    version: 0.005
 requires:
   Carp: 0
   List::Util: 0
@@ -42,12 +42,15 @@ requires:
   Path::Class: 0
   Scalar::Util: 0
   Text::Glob: 0
+  Try::Tiny: 0
   namespace::autoclean: 0
   perl: 5.010
+  re: 0
   strict: 0
   warnings: 0
+  warnings::register: 0
 resources:
   bugtracker: http://rt.cpan.org/Public/Dist/Display.html?Name=Path-Class-Rule
   homepage: http://github.com/dagolden/path-class-rule
   repository: http://github.com/dagolden/path-class-rule
-version: 0.004
+version: 0.005

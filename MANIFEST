@@ -13,9 +13,11 @@ perlcritic.rc
 t/00-compile.t
 t/basic.t
 t/breadth-depth.t
+t/error_handler.t
 t/lib/PCNTest.pm
 t/logic.t
 t/min-max-depth.t
+t/names.t
 t/perl.t
 t/stat_tests.t
 t/symlink.t

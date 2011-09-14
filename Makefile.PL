@@ -38,11 +38,14 @@ my %WriteMakefileArgs = (
     "Path::Class" => 0,
     "Scalar::Util" => 0,
     "Text::Glob" => 0,
+    "Try::Tiny" => 0,
     "namespace::autoclean" => 0,
+    "re" => 0,
     "strict" => 0,
-    "warnings" => 0
+    "warnings" => 0,
+    "warnings::register" => 0
   },
-  "VERSION" => "0.004",
+  "VERSION" => "0.005",
   "test" => {
     "TESTS" => "t/*.t"
   }
