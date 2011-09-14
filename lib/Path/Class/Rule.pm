@@ -4,7 +4,7 @@ use warnings;
 
 package Path::Class::Rule;
 # ABSTRACT: File finder using Path::Class
-our $VERSION = '0.003'; # VERSION
+our $VERSION = '0.004'; # VERSION
 
 # Dependencies
 use namespace::autoclean;
@@ -409,14 +409,14 @@ Path::Class::Rule - File finder using Path::Class
 
 =head1 VERSION
 
-version 0.003
+version 0.004
 
 =head1 SYNOPSIS
 
   use Path::Class::Rule;
 
   my $rule = Path::Class::Rule->new; # match anything
-  $rule->file->size(">10k");      # add/chain rules
+  $rule->file->size(">10k");         # add/chain rules
 
   # iterator interface
   my $next = $rule->iter( @dirs );
@@ -847,6 +847,7 @@ if the filename is "foo":
       my @args = @_; # do this to customize closure with arguments
       return sub {
         my ($item) = shift;
+        return if $item->is_dir;
         return $item->basename =~ /^foo$/;
       }
     }
@@ -922,6 +923,23 @@ implemented as L<Path::Class> subclasses, which adds a degree of extra
 complexity. It takes a single callback to define "interesting" paths to return.
 The callback gets a L<Path::Class::Iterator::File> or
 L<Path::Class::Iterator::Dir> object for evaluation.
+
+L<File::Find::Object> and companion L<File::Find::Object::Rule> are like
+File::Find and File::Find::Rule, but without File::Find inside.  They use an
+interator that does not precompute results. They can return
+L<File::Find::Object::Result> objects, which give a subset of the utility
+of Path::Class objects.  L<File::Find::Object::Rule> appears to be a literal
+translation of L<File::Find::Rule>, including oddities like making C<-M> into a
+boolean.
+
+L<File::chdir::WalkDir> recursively chdirs a tree, calling a callback on each
+file.  No iterator.  Supports exclusion patterns.  Depth-first post-order by
+default, but offers pre-order option. Does not process symlinks.
+
+L<File::Find::Iterator> is based on iterator patterns in Higher Order Perl.  It
+allows a filtering callback. Symlinks are followed automatically without
+infinite loop protection. No control over order. It offers a "state file"
+option for resuming interrupted work.
 
 L<File::Find::Declare> has declarative helper rules, no iterator, is
 Moose-based and offers no control over ordering or following symlinks.
