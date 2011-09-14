@@ -16,8 +16,10 @@ t/breadth-depth.t
 t/lib/PCNTest.pm
 t/logic.t
 t/min-max-depth.t
+t/perl.t
 t/stat_tests.t
 t/symlink.t
+t/vcs.t
 t/x_tests.t
 xt/author/critic.t
 xt/release/distmeta.t

@@ -2,7 +2,7 @@ NAME
     Path::Class::Rule - File finder using Path::Class
 
 VERSION
-    version 0.002
+    version 0.003
 
 SYNOPSIS
       use Path::Class::Rule;
@@ -259,6 +259,36 @@ RULE METHODS
     limit the paths returned to a minimum or maximum depth (respectively)
     from the starting search directory.
 
+  Perl file rules
+      # All perl rules
+      $rule->perl_files;
+
+      # Individual perl file rules
+      $rule->perl_module;     # .pm files
+      $rule->perl_pod;        # .pod files 
+      $rule->perl_test;       # .t files
+      $rule->perl_installer;  # Makefile.PL or Build.PL
+      $rule->perl_script;     # .pl or 'perl' in the shebang
+
+    These rule methods match file names (or a shebang line) that are typical
+    of Perl distribution files.
+
+  Version control file rules
+      # Skip all known VCS files
+      $rule->skip_vcs;
+
+      # Skip individual VCS files
+      $rule->skip_cvs;
+      $rule->skip_rcs;
+      $rule->skip_svn;
+      $rule->skip_git;
+      $rule->skip_bzr;
+      $rule->skip_hg;
+
+    Skips files and/or prunes directories related to a version control
+    system. Just like "skip_dirs", these rules should be specified early to
+    get the correct behavior.
+
   Other rules
    "dangling"
       $rule->symlink->dangling;
@@ -269,13 +299,22 @@ RULE METHODS
     dangling symlink will be returned by the iterator as a Path::Class::File
     object.
 
+   "shebang"
+      $rule->shebang(qr/#!.*\bperl\b/);
+
+    The "shebang" rule takes a list of regular expressions or glob patterns
+    and checks them against the first line of a file.
+
   Negated rules
-    All rule methods have a negated form preceded by "not_".
+    Most rule methods have a negated form preceded by "not_".
 
       $rule->not_name("foo.*")
 
     Because this happens automatically, it includes somewhat silly ones like
     "not_nonempty" (which is thus a less efficient way of saying "empty").
+
+    Rules that skip directories or version control files do not have a
+    negated version.
 
 EXTENDING
   Custom rule subroutines
@@ -326,11 +365,12 @@ EXTENDING
     extend it. "Path::Class::Rule" provides the "add_helper" method to
     provide a similar mechanism for extensions.
 
-    The "add_helper" class method takes two arguments, a "name" for the rule
-    method and a closure-generating callback. An inverted "not_*" method is
-    generated automatically. Extension classes should call this as a class
-    method to install new rule methods. For example, this adds a "foo"
-    method that checks if the filename is "foo":
+    The "add_helper" class method takes three arguments, a "name" for the
+    rule method, a closure-generating callback, and a flag for not
+    generating a negated form of the rule. Unless the flag is true, an
+    inverted "not_*" method is generated automatically. Extension classes
+    should call this as a class method to install new rule methods. For
+    example, this adds a "foo" method that checks if the filename is "foo":
 
       package Path::Class::Rule::Foo;
 
@@ -357,8 +397,8 @@ EXTENDING
     as an existing method.
 
 CAVEATS
-    This is an early release for community feedback and contribution. The
-    API may still change. Some features are still unimplemented:
+    This is an early release for community feedback and contribution. Some
+    features are still unimplemented:
 
     *   Taint mode support
 
@@ -368,7 +408,7 @@ CAVEATS
 
     *   Extension class loading via "import()"
 
-    Test coverage is still poor.
+    Test coverage is poor.
 
     Filetest operators and stat rules are subject to the usual portability
     considerations. See perlport for details.
