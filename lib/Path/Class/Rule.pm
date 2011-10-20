@@ -4,7 +4,7 @@ use warnings;
 
 package Path::Class::Rule;
 # ABSTRACT: File finder using Path::Class
-our $VERSION = '0.005'; # VERSION
+our $VERSION = '0.006'; # VERSION
 
 # Register warnings category
 use warnings::register;
@@ -246,7 +246,25 @@ sub _regexify {
   $add ||= '';
   my $new = ref($re) && reftype($re) eq 'REGEXP' ? $re : glob_to_regex($re);
   my ($pattern, $flags) = regexp_pattern($new);
-  return qr/(?^$flags$add)$pattern/;
+  my $new_flags = $add ? _reflag($flags, $add) : "";
+  return qr/$new_flags$pattern/;
+}
+
+sub _reflag {
+  my ($orig, $add) = @_;
+  $orig ||= "";
+
+  if ( $] >= 5.014 ) {
+    return "(?^$orig$add)";
+  }
+  else {
+    my ($pos, $neg) = split /-/, $orig;
+    $pos ||= "";
+    $neg ||= "";
+    $neg =~ s/i//;
+    $neg = "-$neg" if length $neg;
+    return "(?$add$pos$neg)";
+  }
 }
 
 # "simple" helpers take no arguments
@@ -460,7 +478,7 @@ Path::Class::Rule - File finder using Path::Class
 
 =head1 VERSION
 
-version 0.005
+version 0.006
 
 =head1 SYNOPSIS
 
@@ -967,7 +985,7 @@ Some features are still unimplemented:
 
 =item *
 
-Taint mode support
+Untainting options
 
 =item *
 

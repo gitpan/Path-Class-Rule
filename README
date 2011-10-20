@@ -2,7 +2,7 @@ NAME
     Path::Class::Rule - File finder using Path::Class
 
 VERSION
-    version 0.005
+    version 0.006
 
 SYNOPSIS
       use Path::Class::Rule;
@@ -442,7 +442,7 @@ CAVEATS
     This is an early release for community feedback and contribution. Some
     features are still unimplemented:
 
-    *   Taint mode support
+    *   Untainting options
 
     *   Some File::Find::Rule helpers (e.g. "grep")
 
