@@ -1,10 +1,10 @@
-use 5.008001;
+use 5.010; # re::regexp_pattern
 use strict;
 use warnings;
 
 package Path::Class::Rule;
 # ABSTRACT: File finder using Path::Class
-our $VERSION = '0.006'; # VERSION
+our $VERSION = '0.007'; # VERSION
 
 # Register warnings category
 use warnings::register;
@@ -16,7 +16,7 @@ use Carp;
 use List::Util qw/first/;
 use Number::Compare 0.02;
 use Path::Class;
-use Scalar::Util qw/blessed reftype/;
+use Scalar::Util qw/blessed/;
 use Text::Glob qw/glob_to_regex/;
 use Try::Tiny;
 
@@ -244,7 +244,7 @@ sub _unique_id {
 sub _regexify {
   my ($re, $add) = @_;
   $add ||= '';
-  my $new = ref($re) && reftype($re) eq 'REGEXP' ? $re : glob_to_regex($re);
+  my $new = ref($re) eq 'Regexp' ? $re : glob_to_regex($re);
   my ($pattern, $flags) = regexp_pattern($new);
   my $new_flags = $add ? _reflag($flags, $add) : "";
   return qr/$new_flags$pattern/;
@@ -478,7 +478,7 @@ Path::Class::Rule - File finder using Path::Class
 
 =head1 VERSION
 
-version 0.006
+version 0.007
 
 =head1 SYNOPSIS
 
@@ -1069,9 +1069,9 @@ progress on the request by the system.
 This is open source software.  The code repository is available for
 public review and contribution under the terms of the license.
 
-L<http://github.com/dagolden/path-class-rule>
+L<https://github.com/dagolden/path-class-rule>
 
-  git clone http://github.com/dagolden/path-class-rule
+  git clone https://github.com/dagolden/path-class-rule.git
 
 =head1 AUTHOR
 

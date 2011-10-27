@@ -13,11 +13,10 @@ build_requires:
   Test::More: 0.92
   autodie: 0
   parent: 0
-  perl: 5.010
 configure_requires:
   ExtUtils::MakeMaker: 6.30
 dynamic_config: 0
-generated_by: 'Dist::Zilla version 4.300002, CPAN::Meta::Converter version 2.110930'
+generated_by: 'Dist::Zilla version 4.300002, CPAN::Meta::Converter version 2.112580'
 license: apache
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -34,7 +33,7 @@ no_index:
 provides:
   Path::Class::Rule:
     file: lib/Path/Class/Rule.pm
-    version: 0.006
+    version: 0.007
 requires:
   Carp: 0
   List::Util: 0
@@ -51,6 +50,6 @@ requires:
   warnings::register: 0
 resources:
   bugtracker: http://rt.cpan.org/Public/Dist/Display.html?Name=Path-Class-Rule
-  homepage: http://github.com/dagolden/path-class-rule
-  repository: http://github.com/dagolden/path-class-rule
-version: 0.006
+  homepage: https://github.com/dagolden/path-class-rule
+  repository: https://github.com/dagolden/path-class-rule.git
+version: 0.007

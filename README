@@ -2,7 +2,7 @@ NAME
     Path::Class::Rule - File finder using Path::Class
 
 VERSION
-    version 0.006
+    version 0.007
 
 SYNOPSIS
       use Path::Class::Rule;
@@ -519,9 +519,9 @@ SUPPORT
     This is open source software. The code repository is available for
     public review and contribution under the terms of the license.
 
-    <http://github.com/dagolden/path-class-rule>
+    <https://github.com/dagolden/path-class-rule>
 
-      git clone http://github.com/dagolden/path-class-rule
+      git clone https://github.com/dagolden/path-class-rule.git
 
 AUTHOR
     David Golden <dagolden@cpan.org>
