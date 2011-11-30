@@ -9,6 +9,7 @@ build_requires:
   File::Find: 0
   File::Temp: 0
   File::pushd: 0
+  Path::Class: 0
   Test::Deep: 0
   Test::More: 0.92
   autodie: 0
@@ -33,16 +34,15 @@ no_index:
 provides:
   Path::Class::Rule:
     file: lib/Path/Class/Rule.pm
-    version: 0.007
+    version: 0.008
 requires:
   Carp: 0
   List::Util: 0
   Number::Compare: 0.02
-  Path::Class: 0
+  Path::Class::Dir: 0
   Scalar::Util: 0
   Text::Glob: 0
   Try::Tiny: 0
-  namespace::autoclean: 0
   perl: 5.010
   re: 0
   strict: 0
@@ -52,4 +52,4 @@ resources:
   bugtracker: http://rt.cpan.org/Public/Dist/Display.html?Name=Path-Class-Rule
   homepage: https://github.com/dagolden/path-class-rule
   repository: https://github.com/dagolden/path-class-rule.git
-version: 0.007
+version: 0.008

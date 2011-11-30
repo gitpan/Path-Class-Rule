@@ -1,5 +1,16 @@
 Revision history for Path-Class-Rule
 
+0.008     2011-11-30 09:54:03 EST5EDT
+
+  [DOCUMENTATION]
+
+    - Added File::Set to "See Also" section
+
+  [OTHER]
+
+    - Removed namespace::autoclean as a dependency because it pulls in
+      the whole Moose stack.  [rt.cpan.org #72841, patch by Lars Dɪᴇᴄᴋᴏᴡ]
+
 0.007     2011-10-26 23:50:57 America/New_York
 
   [BUG FIXES]
@@ -47,7 +58,7 @@ Revision history for Path-Class-Rule
     - Added additional modules to SEE ALSO commentary
 
 0.003     2011-09-13 21:05:43 America/New_York
-  
+
   [NEW FEATURES]
 
     - Added 'skip_vcs' (and individual VCS skipping rule methods)
@@ -76,6 +87,6 @@ Revision history for Path-Class-Rule
       a magnitude.
 
 0.001     2011-09-11 22:40:44 America/New_York
-  
+
     - Initial release
 

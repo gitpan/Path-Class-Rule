@@ -4,18 +4,17 @@ use warnings;
 
 package Path::Class::Rule;
 # ABSTRACT: File finder using Path::Class
-our $VERSION = '0.007'; # VERSION
+our $VERSION = '0.008'; # VERSION
 
 # Register warnings category
 use warnings::register;
 
 # Dependencies
-use namespace::autoclean;
 use re 'regexp_pattern';
 use Carp;
 use List::Util qw/first/;
 use Number::Compare 0.02;
-use Path::Class;
+use Path::Class::Dir qw();
 use Scalar::Util qw/blessed/;
 use Text::Glob qw/glob_to_regex/;
 use Try::Tiny;
@@ -75,7 +74,7 @@ sub iter {
   my $args =  ref($_[0])  && !blessed($_[0])  ? shift
             : ref($_[-1]) && !blessed($_[-1]) ? pop : {};
   my $opts = { %defaults, %$args };
-  my @queue = map { { path => dir($_), depth => 0 } } @_ ? @_ : '.';
+  my @queue = map { { path => Path::Class::Dir->new($_), depth => 0 } } @_ ? @_ : '.';
   my $stash = {};
   my %seen;
 
@@ -478,7 +477,7 @@ Path::Class::Rule - File finder using Path::Class
 
 =head1 VERSION
 
-version 0.007
+version 0.008
 
 =head1 SYNOPSIS
 
@@ -1053,6 +1052,12 @@ Moose-based and offers no control over ordering or following symlinks.
 
 L<File::Find::Node> has no iterator, does matching via callback and offers
 no control over ordering.
+
+L<File::Set> builds up a set of files to operate on from a list of directories
+to include or exclude, with control over recursion.  A callback is applied to
+each file (or directory) in the set.  There is no iterator.  There is no
+control over ordering.  Symlinks are not followed.  It has several extra
+features for checksumming the set and creating tarballs with F</bin/tar>.
 
 =for :stopwords cpan testmatrix url annocpan anno bugtracker rt cpants kwalitee diff irc mailto metadata placeholders
 

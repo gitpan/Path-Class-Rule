@@ -2,7 +2,7 @@ NAME
     Path::Class::Rule - File finder using Path::Class
 
 VERSION
-    version 0.007
+    version 0.008
 
 SYNOPSIS
       use Path::Class::Rule;
@@ -506,6 +506,13 @@ SEE ALSO
 
     File::Find::Node has no iterator, does matching via callback and offers
     no control over ordering.
+
+    File::Set builds up a set of files to operate on from a list of
+    directories to include or exclude, with control over recursion. A
+    callback is applied to each file (or directory) in the set. There is no
+    iterator. There is no control over ordering. Symlinks are not followed.
+    It has several extra features for checksumming the set and creating
+    tarballs with /bin/tar.
 
 SUPPORT
   Bugs / Feature Requests

@@ -18,6 +18,7 @@ my %WriteMakefileArgs = (
     "File::Find" => 0,
     "File::Temp" => 0,
     "File::pushd" => 0,
+    "Path::Class" => 0,
     "Test::Deep" => 0,
     "Test::More" => "0.92",
     "autodie" => 0,
@@ -34,17 +35,16 @@ my %WriteMakefileArgs = (
     "Carp" => 0,
     "List::Util" => 0,
     "Number::Compare" => "0.02",
-    "Path::Class" => 0,
+    "Path::Class::Dir" => 0,
     "Scalar::Util" => 0,
     "Text::Glob" => 0,
     "Try::Tiny" => 0,
-    "namespace::autoclean" => 0,
     "re" => 0,
     "strict" => 0,
     "warnings" => 0,
     "warnings::register" => 0
   },
-  "VERSION" => "0.007",
+  "VERSION" => "0.008",
   "test" => {
     "TESTS" => "t/*.t"
   }
