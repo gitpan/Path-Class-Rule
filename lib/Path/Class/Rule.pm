@@ -4,7 +4,7 @@ use warnings;
 
 package Path::Class::Rule;
 # ABSTRACT: File finder using Path::Class
-our $VERSION = '0.008'; # VERSION
+our $VERSION = '0.009'; # VERSION
 
 # Register warnings category
 use warnings::register;
@@ -477,7 +477,7 @@ Path::Class::Rule - File finder using Path::Class
 
 =head1 VERSION
 
-version 0.008
+version 0.009
 
 =head1 SYNOPSIS
 
