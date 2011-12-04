@@ -5,7 +5,6 @@ author:
 build_requires:
   Config: 0
   Exporter: 0
-  File::Copy: 0
   File::Find: 0
   File::Temp: 0
   File::pushd: 0
@@ -13,7 +12,6 @@ build_requires:
   Test::Deep: 0
   Test::More: 0.92
   autodie: 0
-  parent: 0
 configure_requires:
   ExtUtils::MakeMaker: 6.30
 dynamic_config: 0
@@ -34,7 +32,7 @@ no_index:
 provides:
   Path::Class::Rule:
     file: lib/Path/Class/Rule.pm
-    version: 0.009
+    version: 0.010
 requires:
   Carp: 0
   List::Util: 0
@@ -52,4 +50,4 @@ resources:
   bugtracker: http://rt.cpan.org/Public/Dist/Display.html?Name=Path-Class-Rule
   homepage: https://github.com/dagolden/path-class-rule
   repository: https://github.com/dagolden/path-class-rule.git
-version: 0.009
+version: 0.010

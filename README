@@ -2,7 +2,7 @@ NAME
     Path::Class::Rule - File finder using Path::Class
 
 VERSION
-    version 0.009
+    version 0.010
 
 SYNOPSIS
       use Path::Class::Rule;

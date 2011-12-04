@@ -1,5 +1,12 @@
 Revision history for Path-Class-Rule
 
+0.010     2011-12-03 20:17:55 EST5EDT
+
+  [OTHER]
+
+    - Removed 'parent' and 'File::Copy' as dependencies.  Former wasn't
+      really needed and latter was causing problems on 5.10.0.
+
 0.009     2011-12-02 04:38:05 EST5EDT
 
   [BUG FIXES]
