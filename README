@@ -2,7 +2,7 @@ NAME
     Path::Class::Rule - File finder using Path::Class
 
 VERSION
-    version 0.010
+    version 0.011
 
 SYNOPSIS
       use Path::Class::Rule;
@@ -453,7 +453,7 @@ CAVEATS
 
 SEE ALSO
     There are many other file finding modules out there. They all have
-    various features/deficiencies, depending on one's preferences and needs.
+    various features/deficiencies, depending on your preferences and needs.
     Here is an (incomplete) list of alternatives, with some comparison
     commentary.
 
@@ -475,7 +475,7 @@ SEE ALSO
     directories to descend. It does not allow control over breadth/depth
     order, though it does provide means to sort files for processing within
     a directory. Like File::Find, it requires callbacks to use global
-    varaibles.
+    variables.
 
     Path::Class::Iterator walks a directory structure with an iterator. It
     is implemented as Path::Class subclasses, which adds a degree of extra
@@ -485,13 +485,13 @@ SEE ALSO
 
     File::Find::Object and companion File::Find::Object::Rule are like
     File::Find and File::Find::Rule, but without File::Find inside. They use
-    an interator that does not precompute results. They can return
+    an iterator that does not precompute results. They can return
     File::Find::Object::Result objects, which give a subset of the utility
     of Path::Class objects. File::Find::Object::Rule appears to be a literal
     translation of File::Find::Rule, including oddities like making "-M"
     into a boolean.
 
-    File::chdir::WalkDir recursively chdirs a tree, calling a callback on
+    File::chdir::WalkDir recursively descends a tree, calling a callback on
     each file. No iterator. Supports exclusion patterns. Depth-first
     post-order by default, but offers pre-order option. Does not process
     symlinks.
@@ -516,11 +516,9 @@ SEE ALSO
 
 SUPPORT
   Bugs / Feature Requests
-    Please report any bugs or feature requests by email to
-    "bug-path-class-rule at rt.cpan.org", or through the web interface at
+    Please report any bugs or feature requests through the issue tracker at
     <http://rt.cpan.org/Public/Dist/Display.html?Name=Path-Class-Rule>. You
-    will be automatically notified of any progress on the request by the
-    system.
+    will be notified automatically of any progress on your issue.
 
   Source Code
     This is open source software. The code repository is available for

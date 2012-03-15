@@ -1,5 +1,13 @@
 Revision history for Path-Class-Rule
 
+0.011     2012-03-15 09:55:33 EST5EDT
+
+  [BUG FIXES]
+
+    - Fixed major bugs in depth-first traversal relating to proper ordering
+      and incorrectly returning directories that didn't match search
+      criteria
+
 0.010     2011-12-03 20:17:55 EST5EDT
 
   [OTHER]
