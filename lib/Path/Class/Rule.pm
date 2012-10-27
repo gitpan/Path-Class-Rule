@@ -4,7 +4,7 @@ use warnings;
 
 package Path::Class::Rule;
 # ABSTRACT: File finder using Path::Class
-our $VERSION = '0.011'; # VERSION
+our $VERSION = '0.012'; # VERSION
 
 # Register warnings category
 use warnings::register;
@@ -12,6 +12,7 @@ use warnings::register;
 # Dependencies
 use re 'regexp_pattern';
 use Carp;
+use Data::Clone qw/data_clone/;
 use List::Util qw/first/;
 use Number::Compare 0.02;
 use Path::Class::Dir qw();
@@ -30,7 +31,7 @@ sub new {
 
 sub clone {
   my $self = shift;
-  return bless { %$self }, ref $self;
+  return data_clone($self);
 }
 
 sub add_helper {
@@ -469,6 +470,7 @@ while ( my ($name, $coderef) = each %perl_rules ) {
 # vim: ts=2 sts=2 sw=2 et:
 
 __END__
+
 =pod
 
 =head1 NAME
@@ -477,7 +479,7 @@ Path::Class::Rule - File finder using Path::Class
 
 =head1 VERSION
 
-version 0.011
+version 0.012
 
 =head1 SYNOPSIS
 
@@ -1066,7 +1068,7 @@ features for checksumming the set and creating tarballs with F</bin/tar>.
 =head2 Bugs / Feature Requests
 
 Please report any bugs or feature requests through the issue tracker
-at L<http://rt.cpan.org/Public/Dist/Display.html?Name=Path-Class-Rule>.
+at L<https://rt.cpan.org/Public/Dist/Display.html?Name=Path-Class-Rule>.
 You will be notified automatically of any progress on your issue.
 
 =head2 Source Code
@@ -1076,7 +1078,7 @@ public review and contribution under the terms of the license.
 
 L<https://github.com/dagolden/path-class-rule>
 
-  git clone https://github.com/dagolden/path-class-rule.git
+  git clone git://github.com/dagolden/path-class-rule.git
 
 =head1 AUTHOR
 
@@ -1091,4 +1093,3 @@ This is free software, licensed under:
   The Apache License, Version 2.0, January 2004
 
 =cut
-

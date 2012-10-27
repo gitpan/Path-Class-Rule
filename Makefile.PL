@@ -31,6 +31,7 @@ my %WriteMakefileArgs = (
   "NAME" => "Path::Class::Rule",
   "PREREQ_PM" => {
     "Carp" => 0,
+    "Data::Clone" => 0,
     "List::Util" => 0,
     "Number::Compare" => "0.02",
     "Path::Class::Dir" => 0,
@@ -42,7 +43,7 @@ my %WriteMakefileArgs = (
     "warnings" => 0,
     "warnings::register" => 0
   },
-  "VERSION" => "0.011",
+  "VERSION" => "0.012",
   "test" => {
     "TESTS" => "t/*.t"
   }

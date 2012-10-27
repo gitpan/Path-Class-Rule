@@ -2,7 +2,7 @@ NAME
     Path::Class::Rule - File finder using Path::Class
 
 VERSION
-    version 0.011
+    version 0.012
 
 SYNOPSIS
       use Path::Class::Rule;
@@ -517,7 +517,7 @@ SEE ALSO
 SUPPORT
   Bugs / Feature Requests
     Please report any bugs or feature requests through the issue tracker at
-    <http://rt.cpan.org/Public/Dist/Display.html?Name=Path-Class-Rule>. You
+    <https://rt.cpan.org/Public/Dist/Display.html?Name=Path-Class-Rule>. You
     will be notified automatically of any progress on your issue.
 
   Source Code
@@ -526,7 +526,7 @@ SUPPORT
 
     <https://github.com/dagolden/path-class-rule>
 
-      git clone https://github.com/dagolden/path-class-rule.git
+      git clone git://github.com/dagolden/path-class-rule.git
 
 AUTHOR
     David Golden <dagolden@cpan.org>
