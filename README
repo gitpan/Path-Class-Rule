@@ -2,7 +2,7 @@ NAME
     Path::Class::Rule - File finder using Path::Class
 
 VERSION
-    version 0.012
+    version 0.013
 
 SYNOPSIS
       use Path::Class::Rule;
@@ -290,7 +290,7 @@ RULE METHODS
 
   Perl file rules
       # All perl rules
-      $rule->perl_files;
+      $rule->perl_file;
 
       # Individual perl file rules
       $rule->perl_module;     # .pm files

@@ -4,7 +4,7 @@ use warnings;
 
 package Path::Class::Rule;
 # ABSTRACT: File finder using Path::Class
-our $VERSION = '0.012'; # VERSION
+our $VERSION = '0.013'; # VERSION
 
 # Register warnings category
 use warnings::register;
@@ -479,7 +479,7 @@ Path::Class::Rule - File finder using Path::Class
 
 =head1 VERSION
 
-version 0.012
+version 0.013
 
 =head1 SYNOPSIS
 
@@ -813,7 +813,7 @@ from the starting search directory.
 =head2 Perl file rules
 
   # All perl rules
-  $rule->perl_files;
+  $rule->perl_file;
 
   # Individual perl file rules
   $rule->perl_module;     # .pm files
