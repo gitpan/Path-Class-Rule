@@ -2,7 +2,7 @@ NAME
     Path::Class::Rule - File finder using Path::Class
 
 VERSION
-    version 0.014
+    version 0.015
 
 SYNOPSIS
       use Path::Class::Rule;
@@ -59,7 +59,7 @@ USAGE
 
     Creates a new rule object that matches any file or directory. It takes
     no arguments. For convenience, it may also be called on an object, in
-    which case it still returns a new object hat matches any file or
+    which case it still returns a new object that matches any file or
     directory.
 
    "clone"

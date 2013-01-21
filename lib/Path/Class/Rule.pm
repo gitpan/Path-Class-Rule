@@ -4,7 +4,7 @@ use warnings;
 
 package Path::Class::Rule;
 # ABSTRACT: File finder using Path::Class
-our $VERSION = '0.014'; # VERSION
+our $VERSION = '0.015'; # VERSION
 
 # Register warnings category
 use warnings::register;
@@ -479,7 +479,7 @@ Path::Class::Rule - File finder using Path::Class
 
 =head1 VERSION
 
-version 0.014
+version 0.015
 
 =head1 SYNOPSIS
 
@@ -561,7 +561,7 @@ provides an API for extensions
 
 Creates a new rule object that matches any file or directory.  It takes
 no arguments. For convenience, it may also be called on an object, in which
-case it still returns a new object hat matches any file or directory.
+case it still returns a new object that matches any file or directory.
 
 =head3 C<clone>
 

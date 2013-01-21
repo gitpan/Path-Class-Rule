@@ -1,5 +1,11 @@
 Revision history for Path-Class-Rule
 
+0.015     2013-01-21 14:21:33 America/New_York
+
+  [DOCUMENTATION]
+
+    - Oops.  Left off a doc fix from the master repo.  Merged now.
+
 0.014     2013-01-21 14:19:04 America/New_York
 
   [OPTIMIZATION]
