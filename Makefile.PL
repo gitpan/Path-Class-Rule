@@ -34,7 +34,7 @@ my %WriteMakefileArgs = (
     "Data::Clone" => 0,
     "List::Util" => 0,
     "Number::Compare" => "0.02",
-    "Path::Class::Dir" => 0,
+    "Path::Class::Dir" => "0.22",
     "Scalar::Util" => 0,
     "Text::Glob" => 0,
     "Try::Tiny" => 0,
@@ -43,7 +43,7 @@ my %WriteMakefileArgs = (
     "warnings" => 0,
     "warnings::register" => 0
   },
-  "VERSION" => "0.013",
+  "VERSION" => "0.014",
   "test" => {
     "TESTS" => "t/*.t"
   }

@@ -4,7 +4,7 @@ use warnings;
 
 package Path::Class::Rule;
 # ABSTRACT: File finder using Path::Class
-our $VERSION = '0.013'; # VERSION
+our $VERSION = '0.014'; # VERSION
 
 # Register warnings category
 use warnings::register;
@@ -15,7 +15,7 @@ use Carp;
 use Data::Clone qw/data_clone/;
 use List::Util qw/first/;
 use Number::Compare 0.02;
-use Path::Class::Dir qw();
+use Path::Class::Dir 0.22 ();
 use Scalar::Util qw/blessed/;
 use Text::Glob qw/glob_to_regex/;
 use Try::Tiny;
@@ -285,7 +285,7 @@ my %complex_helpers = (
     my @patterns = map { _regexify($_) } @_;
     return sub {
       my $f = shift;
-      my $name = $f->relative($f->parent);
+      my $name = $f->basename;
       return (first { $name =~ $_} @patterns ) ? 1 : 0;
     }
   },
@@ -294,7 +294,7 @@ my %complex_helpers = (
     my @patterns = map { _regexify($_, "i") } @_;
     return sub {
       my $f = shift;
-      my $name = $f->relative($f->parent);
+      my $name = $f->basename;
       return (first { $name =~ m{$_}i } @patterns ) ? 1 : 0;
     }
   },
@@ -479,7 +479,7 @@ Path::Class::Rule - File finder using Path::Class
 
 =head1 VERSION
 
-version 0.013
+version 0.014
 
 =head1 SYNOPSIS
 
@@ -1000,6 +1000,10 @@ Extension class loading via C<import()>
 
 Filetest operators and stat rules are subject to the usual portability
 considerations.  See L<perlport> for details.
+
+Performance suffers somewhat from all of the abstraction layers
+of L<Path::Class> and L<File::Spec>.  Hopefully, convenience
+makes up for that.
 
 =head1 SEE ALSO
 

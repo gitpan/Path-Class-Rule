@@ -2,7 +2,7 @@ NAME
     Path::Class::Rule - File finder using Path::Class
 
 VERSION
-    version 0.013
+    version 0.014
 
 SYNOPSIS
       use Path::Class::Rule;
@@ -450,6 +450,9 @@ CAVEATS
 
     Filetest operators and stat rules are subject to the usual portability
     considerations. See perlport for details.
+
+    Performance suffers somewhat from all of the abstraction layers of
+    Path::Class and File::Spec. Hopefully, convenience makes up for that.
 
 SEE ALSO
     There are many other file finding modules out there. They all have
