@@ -1,5 +1,11 @@
 Revision history for Path-Class-Rule
 
+0.016     2013-01-22 06:28:03 America/New_York
+
+  [CHANGES]
+
+    - Reimplmented as a thin subclass of Path::Iterator::Rule
+
 0.015     2013-01-21 14:21:33 America/New_York
 
   [DOCUMENTATION]

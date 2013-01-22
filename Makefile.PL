@@ -2,14 +2,14 @@
 use strict;
 use warnings;
 
-use 5.010;
+use 5.006;
 
 use ExtUtils::MakeMaker 6.30;
 
 
 
 my %WriteMakefileArgs = (
-  "ABSTRACT" => "File finder using Path::Class",
+  "ABSTRACT" => "Iterative, recursive file finder with Path::Class",
   "AUTHOR" => "David Golden <dagolden\@cpan.org>",
   "BUILD_REQUIRES" => {
     "Config" => 0,
@@ -17,7 +17,6 @@ my %WriteMakefileArgs = (
     "File::Find" => 0,
     "File::Temp" => 0,
     "File::pushd" => 0,
-    "Path::Class" => 0,
     "Test::Deep" => 0,
     "Test::More" => "0.92",
     "autodie" => 0
@@ -30,20 +29,14 @@ my %WriteMakefileArgs = (
   "LICENSE" => "apache",
   "NAME" => "Path::Class::Rule",
   "PREREQ_PM" => {
-    "Carp" => 0,
-    "Data::Clone" => 0,
-    "List::Util" => 0,
-    "Number::Compare" => "0.02",
-    "Path::Class::Dir" => "0.22",
-    "Scalar::Util" => 0,
-    "Text::Glob" => 0,
-    "Try::Tiny" => 0,
-    "re" => 0,
+    "Path::Class" => 0,
+    "Path::Iterator::Rule" => 0,
+    "namespace::clean" => 0,
+    "parent" => 0,
     "strict" => 0,
-    "warnings" => 0,
-    "warnings::register" => 0
+    "warnings" => 0
   },
-  "VERSION" => "0.015",
+  "VERSION" => "0.016",
   "test" => {
     "TESTS" => "t/*.t"
   }
