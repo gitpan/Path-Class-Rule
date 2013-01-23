@@ -3,9 +3,10 @@ use warnings;
 
 package Path::Class::Rule;
 # ABSTRACT: Iterative, recursive file finder with Path::Class
-our $VERSION = '0.016'; # VERSION
+our $VERSION = '0.017'; # VERSION
 
-use parent 'Path::Iterator::Rule';
+use Path::Iterator::Rule 0.002; # new _children API
+our @ISA = qw/Path::Iterator::Rule/;
 
 use Path::Class;
 use namespace::clean;
@@ -19,7 +20,7 @@ sub _objectify {
 sub _children {
     my $self = shift;
     my $path = shift;
-    return $path->children;
+    return map { [ $_->basename, $_ ] } $path->children;
 }
 
 1;
@@ -37,7 +38,7 @@ Path::Class::Rule - Iterative, recursive file finder with Path::Class
 
 =head1 VERSION
 
-version 0.016
+version 0.017
 
 =head1 SYNOPSIS
 

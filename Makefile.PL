@@ -30,13 +30,12 @@ my %WriteMakefileArgs = (
   "NAME" => "Path::Class::Rule",
   "PREREQ_PM" => {
     "Path::Class" => 0,
-    "Path::Iterator::Rule" => 0,
+    "Path::Iterator::Rule" => "0.002",
     "namespace::clean" => 0,
-    "parent" => 0,
     "strict" => 0,
     "warnings" => 0
   },
-  "VERSION" => "0.016",
+  "VERSION" => "0.017",
   "test" => {
     "TESTS" => "t/*.t"
   }

@@ -2,7 +2,7 @@ NAME
     Path::Class::Rule - Iterative, recursive file finder with Path::Class
 
 VERSION
-    version 0.016
+    version 0.017
 
 SYNOPSIS
       use Path::Class::Rule;
