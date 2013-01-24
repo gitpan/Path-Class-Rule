@@ -1,5 +1,11 @@
 Revision history for Path-Class-Rule
 
+0.018     2013-01-24 07:27:28 America/New_York
+
+  [DOCUMENTATION]
+
+    - Added PERFORMANCE section with caveats
+
 0.017     2013-01-23 14:44:04 America/New_York
 
   [CHANGES]
